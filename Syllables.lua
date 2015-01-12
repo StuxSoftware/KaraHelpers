@@ -1,19 +1,11 @@
--- Syllable X Position (for use like in NyuFX.)
--- If you want to have the exact syllable position without vertical kana lines, use
--- the function getSylXOrig()
---
--- Currently untested.
-function getSylX() if tenv["syl"] == nil then error("This function must be executed in a syllable template."); end; if line.halign == "center" then return line.left + syl[line.halign]; else return line[halign]; end; end;
+function getSylY() if tenv["syl"] == nil then error("This function must be executed in a syllable template."); end; local syl = tenv.syl; if tenv.line.valign ~= "middle" then return syl.center; else local height = 0; local pos = 0; local lheight = 0; for si = 1,#tenv.line.kara do if not _G.is_syl_blank(tenv.line.kara[si]) then if tenv.line.kara[si].i <= syl.i then lheight = 0; end; for char in _G.unicode.chars(tenv.line.kara[si].text) do local w, h, d, e = _G.aegisub.text_extents(tenv.line.styleref, char); height = height + h; if tenv.line.kara[si].i <= syl.i then pos = pos + h; lheight = lheight + h; end; end end; end; return (meta.res_y-height)/2+pos-(lheight/2); end; end;
 
--- Syllable Y Position (for use like in NyuFX.)
--- If you want to have the exact syllable position without vertical kana-lines, use
--- the function getSylYOrig()
---
--- Currently untested.
-function getSylY() if tenv["syl"] == nil then error("This function must be executed in a syllable template."); end; if line.halign == "center" then return line[line.valign]; else if line.valign == "middle" then return line[line.valign] + (line.height * (syl.i - (#line.kara / 2.0))); else return line[line.valign] + ((line.valign == "right" and -1 or 1) * line.height * syl.i); end; end; end;
+function getSylX() if tenv["syl"] == nil then error("This function must be executed in a syllable template."); end; local syl = tenv.syl; if tenv.line.valign ~= "middle" then return line.middle; else local m_r = meta.res_x-line.height/2; if tenv.line.halign == "right" then m_r = m_r - line.eff_margin_r; else if tenv.line.halign == "left" then m_r = m_r - line.eff_margin_l; end; end; return m_r; end; end;
 
--- Returns the X Coordinate of the syllable.
-function getSylXOrig() if tenv["syl"] == nil then error("This function must be executed in a syllable template."); end; return line.left + syl[line.halign]; end;
+function getSylText() if tenv["syl"] == nil then error("This function must be executed in a syllable template."); end; local syl = tenv.syl; if tenv.line.valign ~= "middle" then return syl.text; else local result = ""; local first = true; for char in _G.unicode.chars(tenv.syl.text) do if not first then result = result .. "\\N"; end; result = result .. char; first = false; end; return result; end; end;
 
--- Returns the Y Coordinate of the syllable.
-function getSylYOrig() return line[line.valign]; end;
+--[[
+  Basic Kanji Karaoke Placement
+  template syl noblank notext
+  {\an5\pos(!getSylX()!,!getSylY()!)}!getSylText()!
+]]
